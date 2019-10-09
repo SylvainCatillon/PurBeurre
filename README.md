@@ -7,7 +7,7 @@ You can save your search, to find easily all of your substitutes.
 # Getting started
 Use the requirement.txt to install the needed package: 
 `pip install -r requirements.txt`\
-Please install MySQL: `https://dev.mysql.com/downloads/mysql/#downloads`
+Please install MySQL: https://dev.mysql.com/downloads/mysql/#downloads \
 Then create a data base, and change the `config.py` file to set the user and password. Choose a user who can access the data base.\
 Last step before we start, `launch 'fill_database.py` to fill the data base with the datas of Open Food Facts\
 Finnaly, you can launch `main.py` to start the app
