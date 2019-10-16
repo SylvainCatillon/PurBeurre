@@ -1,11 +1,9 @@
 import mysql.connector
 import config
-import api_communicator as apic
 
-class Create_database:
+class DatabaseHandler:
 
 	
-	# categories_tag = ["cereales-pour-petit-dejeuner", "Biscuits apéritifs", "chips"]
 	PRODUCT_TAGS = ["product_name", "generic_name_fr", "url", "nutrition_grade_fr", "purchase_places"]
 	TABLES_LIST = [
 	"Category (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50) UNIQUE)",
@@ -50,7 +48,7 @@ class Create_database:
 					querry = "INSERT IGNORE INTO Product (category_id, name, nutriscore, description, shop, url) VALUES (%s, %s, %s, %s, %s, %s)"
 					cursor.execute(querry, p_values)
 
-	def fill_db(self):
+	def fill_database(self):
 		cnx = mysql.connector.connect(user= config.user, password = config.password, database = config.database, host = config.host)
 		cursor = cnx.cursor()
 		try:
@@ -60,7 +58,3 @@ class Create_database:
 		finally:
 			cursor.close()
 			cnx.close()
-
-if __name__ == '__main__':
-		pass
-
