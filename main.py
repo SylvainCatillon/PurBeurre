@@ -1,18 +1,20 @@
-import DatabaseHandler as dbh
-import ApiCommunicator as ac
-import DatabaseSeeker as dbs
-import Menu
+from ApiCommunicator import ApiCommunicator
+from DatabaseSeeker import DatabaseSeeker
+from DatabaseHandler import DatabaseHandler
+from Menu import Menu
 
 def main():
-	seeker = dbs.DatabaseSeeker()
+	seeker = DatabaseSeeker()
 	categories_name = seeker.test_database()
 	if categories_name:
-		products_dict = ac.ApiCommunicator.dl_products(categories_name)
-		handler = dbh.DatabaseHandler(products_dict)
+		products_dict = ApiCommunicator.dl_products(categories_name)
+		handler = DatabaseHandler(products_dict)
 		handler.fill_database()
-	product_id, category_id = seeker.temp_random_product()
-	sbt_dict = seeker.find_substitute(product_id, category_id)
-	Menu.Menu.display_substitute(sbt_dict)
+	menu = Menu()
+	menu.choose_category()
+	#product_id, category_id = seeker.temp_random_product()
+	#sbt_dict = seeker.find_substitute(product_id, category_id)
+	#Menu.display_substitute(sbt_dict)
 
 
 if __name__ == '__main__':

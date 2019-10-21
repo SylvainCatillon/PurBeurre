@@ -60,7 +60,7 @@ ce produit dans la base de données") # déplacer cette ligne vers Menu.display_
 		cnx = self.connect()
 		cursor = cnx.cursor()
 		try: # rajouter except?
-			categories_name = config["categories_name"]
+			categories_name = [name for name in config["categories_name"]]
 			cursor.execute("SHOW TABLES")
 			tables_list = [tpl[0] for tpl in cursor.fetchall()]
 			if "category" in tables_list and "product" in tables_list:
