@@ -5,7 +5,7 @@ class DatabaseHandler:
 
 	
 	PRODUCT_TAGS = ["product_name", "generic_name_fr", "url",
-					"nutrition_grade_fr", "purchase_places"]
+					"nutrition_grade_fr", "stores"]
 	TABLES_LIST = [
 		"Category (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,\
  name VARCHAR(50) UNIQUE)",
@@ -21,6 +21,7 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 
 	def __init__(self, products_dict):
 		self.products_dict = products_dict
+		print("DatabaseHandler created")
 
 
 	@staticmethod
@@ -37,8 +38,8 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 	def verify_product(self, product):
 		for tag in self.PRODUCT_TAGS:
 			if tag not in product.keys() or not product[tag]:
-				if tag == "purchase_places":
-					product["purchase_places"] = ""
+				if tag == "stores":
+					product["stores"] = ""
 				else:
 					return None
 		return product
@@ -59,7 +60,7 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 				if p:
 					p_values = (category_id, p["product_name"],
 						p["nutrition_grade_fr"], p["generic_name_fr"],
-						p["purchase_places"], p["url"])
+						p["stores"], p["url"])
 					# change ignore. On duplicate key update? if not exists?
 					querry = "INSERT IGNORE INTO Product (category_id, name, \
 						nutriscore, description, shop, url) \

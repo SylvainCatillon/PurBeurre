@@ -43,11 +43,11 @@ class DatabaseSeeker:
 			querry = "SELECT nutriscore FROM Product WHERE category_id = %s \
 			and nutriscore < (SELECT nutriscore FROM Product WHERE id = %s) \
 			ORDER BY nutriscore LIMIT 1"
-			cursor.execute(querry, (category_id, product_id))
+			cursor.execute(querry, (category_id, product_id)) # fonction find_nutriscore?
 			result = cursor.fetchone()
 			if not result:
 				print("Il n'y a pas d'alternative plus saine à \
-ce produit dans la base de données")
+ce produit dans la base de données") # déplacer cette ligne vers Menu.display_substitue?
 			else:
 				sbt_dict = self.select_substitute(
 					cursor, category_id, result["nutriscore"])
@@ -55,3 +55,31 @@ ce produit dans la base de données")
 			cursor.close()
 			cnx.close()
 		return sbt_dict
+
+	def test_database(self): # a revoir. a utiliser avant et après la création de la db
+		cnx = self.connect()
+		cursor = cnx.cursor()
+		try: # rajouter except?
+			categories_name = config["categories_name"]
+			cursor.execute("SHOW TABLES")
+			tables_list = [tpl[0] for tpl in cursor.fetchall()]
+			if "category" in tables_list and "product" in tables_list:
+				i = 0
+				while i < len(categories_name): # if describe category == les bonne values???
+					category = categories_name[i]
+					cursor.execute("SELECT id FROM Product WHERE category_id = \
+						(SELECT id FROM Category WHERE name = %s)", (category,))
+					if  len(cursor.fetchall()) > config["min_prod_in_db"]:
+						categories_name.remove(category)
+					else:
+						i += 1
+				"""for category in config.categories_name:
+					cursor.execute("SELECT id FROM Product WHERE category_id = \
+						(SELECT id FROM Category WHERE name = %s)", (category,))
+					if len(cursor.fetchall()) < config.min_prod_in_db:
+						categories_name.append(category)"""
+		finally:
+			cursor.close()
+			cnx.close()
+		return categories_name
+
