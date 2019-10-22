@@ -11,7 +11,7 @@ def main():
 		handler = DatabaseHandler(products_dict)
 		handler.fill_database()
 	menu = Menu()
-	menu.choose_category()
+	menu.main_menu()
 	#product_id, category_id = seeker.temp_random_product()
 	#sbt_dict = seeker.find_substitute(product_id, category_id)
 	#Menu.display_substitute(sbt_dict)

@@ -1,5 +1,5 @@
 import mysql.connector
-from random import choice
+from random import choice, sample
 from config import database_config as config
 
 class DatabaseSeeker:
@@ -25,6 +25,22 @@ class DatabaseSeeker:
 			cursor.close()
 			cnx.close()
 		return product_id, category_id
+
+	def random_products(self, category_name):
+		cnx = self.connect()
+		cursor = cnx.cursor()
+		try:
+			cursor.execute("SELECT id FROM Category WHERE name = %s",
+				(category_name,))
+			category_id = cursor.fetchone()[0]
+			cursor.execute("SELECT id, name FROM Product WHERE category_id = %s",
+					      (category_id,))
+			all_products = cursor.fetchall() # ou [tpl[0] for tpl in cursor.fetchall()] si je ne veux que le nom
+			products_list = sample(all_products, config["proposed_products"])
+		finally:
+			cursor.close()
+			cnx.close()
+		return products_list, category_id
 
 	def select_substitute(self, cursor, category_id, substitute_score): # static method? dépend du reste du programme
 		querry = "SELECT id from Product WHERE category_id = %s and \
@@ -60,7 +76,7 @@ ce produit dans la base de données") # déplacer cette ligne vers Menu.display_
 		cnx = self.connect()
 		cursor = cnx.cursor()
 		try: # rajouter except?
-			categories_name = [name for name in config["categories_name"]]
+			categories_name = list(config["categories_name"]) # To create a new list and not change the initial one
 			cursor.execute("SHOW TABLES")
 			tables_list = [tpl[0] for tpl in cursor.fetchall()]
 			if "category" in tables_list and "product" in tables_list:

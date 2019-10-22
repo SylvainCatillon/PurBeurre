@@ -4,7 +4,7 @@ from config import database_config as config
 class DatabaseHandler:
 
 	
-	PRODUCT_TAGS = ["product_name", "generic_name_fr", "url",
+	PRODUCT_TAGS = ["product_name", "brands", "generic_name_fr", "url",
 					"nutrition_grade_fr", "stores"]
 	TABLES_LIST = [
 		"Category (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,\
@@ -38,8 +38,8 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 	def verify_product(self, product):
 		for tag in self.PRODUCT_TAGS:
 			if tag not in product.keys() or not product[tag]:
-				if tag == "stores":
-					product["stores"] = ""
+				if tag in ("stores", "brands"):
+					product[tag] = ""
 				else:
 					return None
 		return product
@@ -58,7 +58,11 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 			for p in products_list:
 				p = self.verify_product(p)
 				if p:
-					p_values = (category_id, p["product_name"],
+					p_name = p["product_name"]
+					p_brand = p["brands"].split(",")[0]
+					if p_brand and p_brand not in p_name:
+						p_name += " " + p_brand
+					p_values = (category_id, p_name,
 						p["nutrition_grade_fr"], p["generic_name_fr"],
 						p["stores"], p["url"])
 					# change ignore. On duplicate key update? if not exists?
