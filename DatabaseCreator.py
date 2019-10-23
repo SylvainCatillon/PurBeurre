@@ -1,7 +1,7 @@
 import mysql.connector
 from config import database_config as config
 
-class DatabaseHandler:
+class DatabaseCreator:
 
 	
 	PRODUCT_TAGS = ["product_name", "brands", "generic_name_fr", "url",
@@ -21,8 +21,6 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 
 	def __init__(self, products_dict):
 		self.products_dict = products_dict
-		print("DatabaseHandler created")
-
 
 	@staticmethod
 	def connect():
@@ -44,6 +42,20 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 					return None
 		return product
 
+	def insert_product(self, cursor, product, category_id): # staticmethod?
+		p_name = product["product_name"]
+		p_brand = product["brands"].split(",")[0]
+		if p_brand and p_brand not in p_name:
+			p_name += " " + p_brand
+		p_values = (category_id, p_name,
+			product["nutrition_grade_fr"], product["generic_name_fr"],
+			product["stores"], product["url"])
+		# change ignore. On duplicate key update? if not exists?
+		querry = "INSERT IGNORE INTO Product (category_id, name, \
+			nutriscore, description, shop, url) \
+			VALUES (%s, %s, %s, %s, %s, %s)" # mauvaise indentation?
+		cursor.execute(querry, p_values)
+
 	def fill_tables(self, cursor):
 		for category, products_list in self.products_dict.items():
 			cursor.execute(
@@ -53,23 +65,12 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 				category_id = result[0]
 			else:
 				cursor.execute(
-					"INSERT INTO Category (name) VALUES (%s)", (category,)) #  On duplicate key update? if not exists?
+					"INSERT INTO Category (name) VALUES (%s)", (category,))
 				category_id = cursor.lastrowid
-			for p in products_list:
-				p = self.verify_product(p)
-				if p:
-					p_name = p["product_name"]
-					p_brand = p["brands"].split(",")[0]
-					if p_brand and p_brand not in p_name:
-						p_name += " " + p_brand
-					p_values = (category_id, p_name,
-						p["nutrition_grade_fr"], p["generic_name_fr"],
-						p["stores"], p["url"])
-					# change ignore. On duplicate key update? if not exists?
-					querry = "INSERT IGNORE INTO Product (category_id, name, \
-						nutriscore, description, shop, url) \
-						VALUES (%s, %s, %s, %s, %s, %s)" # mauvaise indentation
-					cursor.execute(querry, p_values)
+			for product in products_list:
+				product = self.verify_product(product)
+				if product:
+					self.insert_product(cursor, product, category_id)
 
 	def fill_database(self):
 		cnx = self.connect()

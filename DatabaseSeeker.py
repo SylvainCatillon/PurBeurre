@@ -33,7 +33,7 @@ class DatabaseSeeker:
 			cursor.execute("SELECT id FROM Category WHERE name = %s",
 				(category_name,))
 			category_id = cursor.fetchone()[0]
-			cursor.execute("SELECT id, name FROM Product WHERE category_id = %s",
+			cursor.execute("SELECT id, name FROM Product WHERE category_id=%s",
 					      (category_id,))
 			all_products = cursor.fetchall() # ou [tpl[0] for tpl in cursor.fetchall()] si je ne veux que le nom
 			products_list = sample(all_products, config["proposed_products"])
@@ -61,16 +61,39 @@ class DatabaseSeeker:
 			ORDER BY nutriscore LIMIT 1"
 			cursor.execute(querry, (category_id, product_id)) # fonction find_nutriscore?
 			result = cursor.fetchone()
-			if not result:
-				print("Il n'y a pas d'alternative plus saine à \
-ce produit dans la base de données") # déplacer cette ligne vers Menu.display_substitue?
-			else:
+			if result:
 				sbt_dict = self.select_substitute(
 					cursor, category_id, result["nutriscore"])
 		finally:
 			cursor.close()
 			cnx.close()
 		return sbt_dict
+
+	def save_substitute(self, substitute_id):
+		cnx = self.connect()
+		cursor = cnx.cursor()
+		try:
+			cursor.execute("INSERT INTO Favory (product_id) VALUES (%s)",
+				(substitute_id,))
+			cnx.commit()
+		finally:
+			cursor.close()
+			cnx.close()
+
+	def see_favories(self):
+		cnx = self.connect()
+		cursor = cnx.cursor(dictionary=True)
+		favories = []
+		try:
+			cursor.execute("SELECT product_id FROM Favory")
+			result = cursor.fetchall() # for e in cursor?
+			for dico in result:
+				cursor.execute("SELECT * FROM Product WHERE id = %s", (dico["product_id"],))
+				favories.append(cursor.fetchone())
+		finally:
+			cursor.close()
+			cnx.close()
+		return favories
 
 	def test_database(self): # a revoir. a utiliser avant et après la création de la db
 		cnx = self.connect()
@@ -89,11 +112,6 @@ ce produit dans la base de données") # déplacer cette ligne vers Menu.display_
 						categories_name.remove(category)
 					else:
 						i += 1
-				"""for category in config.categories_name:
-					cursor.execute("SELECT id FROM Product WHERE category_id = \
-						(SELECT id FROM Category WHERE name = %s)", (category,))
-					if len(cursor.fetchall()) < config.min_prod_in_db:
-						categories_name.append(category)"""
 		finally:
 			cursor.close()
 			cnx.close()
