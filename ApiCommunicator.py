@@ -33,6 +33,6 @@ class ApiCommunicator:
 					print("La catégorie {} n'existe pas ou ne compte pas assez de produits".format(category))
 					break
 				products_list += result["products"]
-			print(category)
+			print(category + " téléchargé(e)s")
 			products_dict[category] = products_list
 		return products_dict

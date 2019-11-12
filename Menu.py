@@ -45,12 +45,15 @@ ce produit dans la base de données")
 			return self.get_input(string, input_range)
 		return inp
 
-	def prepare_database(self):
-		categories_name = self.seeker.test_database()
-		if categories_name:
-			products_dict = ApiCommunicator.dl_products(categories_name)
-			creator = DatabaseCreator(products_dict)
-			creator.fill_database()
+	def prepare_database(self, categories_name, reset = False):
+		print("Merci de patienter quelques instants, le système télécharge \
+les produits dans la base de données")
+		products_dict = ApiCommunicator.dl_products(categories_name)
+		creator = DatabaseCreator(products_dict)
+		if reset:
+			creator.reset_database()
+		creator.fill_database()
+		print("Données téléchargées")
 
 	def choose_category(self):
 		"""Ask the user to choose a category, by a number on input"""
@@ -78,6 +81,14 @@ Enregistrer\n2: Ne pas enregistrer\n"
 		if inp == 1:
 			self.seeker.save_substitute(sbt_dict["id"])
 
+	def search_substitute(self):
+		category_name = self.choose_category()
+		product, category_id = self.choose_product(category_name)
+		sbt_dict = self.seeker.find_substitute(product[0], category_id)
+		self.display_substitute(sbt_dict)
+		if sbt_dict:
+			self.save_substitute(sbt_dict)
+
 	def see_favories(self):
 		favories = self.seeker.see_favories()
 		if favories:
@@ -90,21 +101,29 @@ pour voir les détails:\n"
 		else:
 			print("Vous n'avez pas de substitut enregistré")
 
-	def main_menu(self):
-		"""The main method of Menu. Launch this method to run the app."""
-		self.prepare_database()
-		string = "1: Quel aliment souhaitez vous remplacer\n2: Retrouver mes \
-aliments substitués\n"
+	def update_database(self):
+		string = "Attention, mettre à jour la base de données va supprimer vos\
+ données actuelles (catégories, produits et substituts enregistrés)\n1: Mettre\
+ à jour la base de données\n2: Garder les données actuelles\n"
 		inp = self.get_input(string, 2)
 		if inp == 1:
-			category_name = self.choose_category()
-			product, category_id = self.choose_product(category_name)
-			sbt_dict = self.seeker.find_substitute(product[0], category_id)
-			self.display_substitute(sbt_dict)
-			if sbt_dict:
-				self.save_substitute(sbt_dict)
-		else:
+			self.prepare_database(config["categories_name"], reset = True)
+
+	def main_menu(self):
+		"""The main method of Menu. Launch this method to run the app."""
+		print("Bonjour, bienvenue dans l'application de Pur Beurre")
+		categories_name = self.seeker.test_database()
+		if categories_name:
+			self.prepare_database(categories_name)
+		string = "1: Quel aliment souhaitez vous remplacer\n2: Retrouver mes \
+aliments substitués\n3: Mettre à jour la base de données\n"
+		inp = self.get_input(string, 3)
+		if inp == 1:
+			self.search_substitute()
+		elif inp == 2:
 			self.see_favories()
+		elif inp == 3:
+			self.update_database()
 		string = "1: Retourner au menu principal\n2: Quitter\n"
 		inp = self.get_input(string, 2)
 		if inp == 1:

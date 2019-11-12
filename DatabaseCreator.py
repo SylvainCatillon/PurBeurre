@@ -82,3 +82,15 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 		finally:
 			cursor.close()
 			cnx.close()
+
+	def reset_database(self):
+		cnx = self.connect()
+		cursor = cnx.cursor()
+		try:
+			cursor.execute("DROP TABLE Favory")
+			cursor.execute("DROP TABLE Product")
+			cursor.execute("DROP TABLE Category")
+			cnx.commit()
+		finally:
+			cursor.close()
+			cnx.close()
