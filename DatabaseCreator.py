@@ -19,8 +19,9 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 (product_id) REFERENCES Product(id))"
 ]
 
-	def __init__(self, products_dict):
-		self.products_dict = products_dict
+	def __init__(self, cursor, cnx):
+		self.cursor = cursor
+		self.cnx = cnx
 
 	@staticmethod
 	def connect():
@@ -28,10 +29,10 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 			user= config["user"], password = config["password"],
 			database = config["database"], host = config["host"])
 
-	def create_tables(self, cursor):
+	def create_tables(self):
 		for table in self.TABLES_LIST:
 			request = "CREATE TABLE IF NOT EXISTS " + table + " ENGINE=INNODB"
-			cursor.execute(request)
+			self.cursor.execute(request)
 
 	def verify_product(self, product):
 		for tag in self.PRODUCT_TAGS:
@@ -42,7 +43,7 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 					return None
 		return product
 
-	def insert_product(self, cursor, product, category_id): # staticmethod?
+	def insert_product(self, product, category_id): # staticmethod?
 		p_name = product["product_name"]
 		p_brand = product["brands"].split(",")[0]
 		if p_brand and p_brand not in p_name:
@@ -54,15 +55,16 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 		querry = "INSERT IGNORE INTO Product (category_id, name, \
 			nutriscore, description, shop, url) \
 			VALUES (%s, %s, %s, %s, %s, %s)" # mauvaise indentation?
-		cursor.execute(querry, p_values)
+		self.cursor.execute(querry, p_values)
 
-	def fill_tables(self, cursor):
-		for category, products_list in self.products_dict.items():
+	def fill_tables(self, products_dict):
+		cursor = self.cursor
+		for category, products_list in products_dict.items():
 			cursor.execute(
 				"SELECT id FROM Category WHERE name = %s", (category,)) 
 			result = cursor.fetchone()
 			if result:
-				category_id = result[0]
+				category_id = result["id"]
 			else:
 				cursor.execute(
 					"INSERT INTO Category (name) VALUES (%s)", (category,))
@@ -70,27 +72,17 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 			for product in products_list:
 				product = self.verify_product(product)
 				if product:
-					self.insert_product(cursor, product, category_id)
+					self.insert_product(product, category_id)
 
-	def fill_database(self):
-		cnx = self.connect()
-		cursor = cnx.cursor()
-		try:
-			self.create_tables(cursor)
-			self.fill_tables(cursor)
-			cnx.commit()
-		finally:
-			cursor.close()
-			cnx.close()
+	def fill_database(self, products_dict):
+		cursor = self.cursor
+		self.create_tables()
+		self.fill_tables(products_dict)
+		self.cnx.commit()
 
 	def reset_database(self):
-		cnx = self.connect()
-		cursor = cnx.cursor()
-		try:
-			cursor.execute("DROP TABLE Favory")
-			cursor.execute("DROP TABLE Product")
-			cursor.execute("DROP TABLE Category")
-			cnx.commit()
-		finally:
-			cursor.close()
-			cnx.close()
+		cursor = self.cursor
+		cursor.execute("DROP TABLE Favory")
+		cursor.execute("DROP TABLE Product")
+		cursor.execute("DROP TABLE Category")
+		self.cnx.commit()

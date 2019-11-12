@@ -1,3 +1,4 @@
+import mysql.connector
 from config import database_config as config
 from ApiCommunicator import ApiCommunicator
 from DatabaseSeeker import DatabaseSeeker
@@ -11,7 +12,17 @@ class Menu:
 	-See an healthier product of the category"""
 
 	def __init__(self):
-		self.seeker = DatabaseSeeker()
+		self.cnx = mysql.connector.connect(
+			user= config["user"], password = config["password"],
+			database = config["database"], host = config["host"])
+		self.cursor = self.cnx.cursor(dictionary=True)
+		self.seeker = DatabaseSeeker(self.cursor, self.cnx)
+		self.creator = None
+
+
+	def close_connection(self):
+		self.cursor.close()
+		self.cnx.close()
 
 	@staticmethod
 	def display_substitute(sbt_dict):
@@ -49,10 +60,11 @@ ce produit dans la base de données")
 		print("Merci de patienter quelques instants, le système télécharge \
 les produits dans la base de données")
 		products_dict = ApiCommunicator.dl_products(categories_name)
-		creator = DatabaseCreator(products_dict)
+		if not self.creator:
+			self.creator = DatabaseCreator(self.cursor, self.cnx)
 		if reset:
-			creator.reset_database()
-		creator.fill_database()
+			self.creator.reset_database()
+		self.creator.fill_database(products_dict)
 		print("Données téléchargées")
 
 	def choose_category(self):
@@ -70,7 +82,7 @@ indiquant le chiffre associé:\n"
 		string = "Veuillez choisir un produit parmi les suivants, en indiquant\
  le chiffre associé:\n"
 		for i, product in enumerate(products_list):
-			string += "{}: {}\n".format(i+1, product[1]) # The list start with 1 instead of 0 for the user. product[1] for the name, [0] is the id
+			string += "{}: {}\n".format(i+1, product["name"]) # The list start with 1 instead of 0 for the user. product[1] for the name, [0] is the id
 		inp = self.get_input(string, i+1)
 		return products_list[inp-1], category_id
 
@@ -84,7 +96,7 @@ Enregistrer\n2: Ne pas enregistrer\n"
 	def search_substitute(self):
 		category_name = self.choose_category()
 		product, category_id = self.choose_product(category_name)
-		sbt_dict = self.seeker.find_substitute(product[0], category_id)
+		sbt_dict = self.seeker.find_substitute(product["id"], category_id)
 		self.display_substitute(sbt_dict)
 		if sbt_dict:
 			self.save_substitute(sbt_dict)
