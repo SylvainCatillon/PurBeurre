@@ -1,11 +1,15 @@
-from Menu import Menu
+from ConnectMenu import ConnectMenu
 
-def main():
+"""def main():
 	menu = Menu()
 	try:
 		menu.main_menu()
 	finally:
-		menu.close_connection()
+		menu.close_connection()"""
+
+def new_main():
+	with ConnectMenu() as menu:
+		menu.main_menu()
 
 if __name__ == '__main__':
-	main()
+	new_main()

@@ -1,6 +1,3 @@
-import mysql.connector
-from config import database_config as config
-
 class DatabaseCreator:
 
 	
@@ -23,12 +20,6 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 		self.cursor = cursor
 		self.cnx = cnx
 
-	@staticmethod
-	def connect():
-		return mysql.connector.connect(
-			user= config["user"], password = config["password"],
-			database = config["database"], host = config["host"])
-
 	def create_tables(self):
 		for table in self.TABLES_LIST:
 			request = "CREATE TABLE IF NOT EXISTS " + table + " ENGINE=INNODB"
@@ -43,7 +34,7 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 					return None
 		return product
 
-	def insert_product(self, product, category_id): # staticmethod?
+	def insert_product(self, product, category_id):
 		p_name = product["product_name"]
 		p_brand = product["brands"].split(",")[0]
 		if p_brand and p_brand not in p_name:
