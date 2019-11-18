@@ -8,49 +8,59 @@ class DatabaseSeeker:
 		self.cnx = cnx
 
 	def random_products(self, category_name):
+		"""Randomly selects products from the given category.
+		Change proposed_products in config.py to change the number of
+		products proposed to the user"""
 		cursor = self.cursor
-		cursor.execute("SELECT id FROM Category WHERE name = %s",
-			(category_name,))
+		cursor.execute(
+			"SELECT id FROM Category WHERE name = %s", (category_name,))
 		category_id = self.cursor.fetchone()["id"]
-		cursor.execute("SELECT id, name FROM Product WHERE category_id=%s",
-				      (category_id,))
+		querry = "SELECT name, category_id, nutriscore FROM Product \
+		WHERE category_id=%s"
+		cursor.execute(querry, (category_id,))
 		all_products = cursor.fetchall()
 		products_list = sample(all_products, config.proposed_products)
-		return products_list, category_id
+		return products_list
 
-	def select_substitute(self, category_id, substitute_score):
-		cursor = self.cursor
-		querry = "SELECT id from Product WHERE category_id = %s and \
-		nutriscore = %s"
-		cursor.execute(querry, (category_id, substitute_score))
-		substitute_id = choice(cursor.fetchall())["id"]
-		cursor.execute("SELECT * FROM Product WHERE id = %s", (substitute_id,))
-		return cursor.fetchone()
-
-
-	def find_substitute(self, product_id, category_id):
+	def find_substitute(self, product):
+		"""Finds a substitute for a given product (must be a dict 
+		with at least 'nustriscore' and 'category_id' as keys)
+		-Select the higher nutriscore of the product's category
+		-If there is no higher nutriscore, return an empty dict
+		-Else, select a random product between the possible subsitutes
+		and return a dict with all the informations of this product"""
 		sbt_dict = {}
+		cursor = self.cursor
 		querry = "SELECT nutriscore FROM Product WHERE category_id = %s \
-		and nutriscore < (SELECT nutriscore FROM Product WHERE id = %s) \
-		ORDER BY nutriscore LIMIT 1"
-		self.cursor.execute(querry, (category_id, product_id)) # fonction find_nutriscore?
+		and nutriscore < %s ORDER BY nutriscore LIMIT 1"
+		cursor.execute(
+			querry, (product["category_id"], product["nutriscore"]))
 		result = self.cursor.fetchone()
 		if result:
-			sbt_dict = self.select_substitute(category_id, result["nutriscore"])
+			querry = "SELECT id from Product WHERE category_id = %s and \
+			nutriscore = %s"
+			cursor.execute(
+				querry, (product["category_id"], result["nutriscore"]))
+			substitute_id = choice(cursor.fetchall())["id"]
+			cursor.execute(
+				"SELECT * FROM Product WHERE id = %s", (substitute_id,))
+			sbt_dict = cursor.fetchone()
 		return sbt_dict
 
 	def save_substitute(self, substitute_id):
-		self.cursor.execute("INSERT INTO Favory (product_id) VALUES (%s)",
-			(substitute_id,))
+		"""Save the id of a product into the table Favory"""
+		self.cursor.execute(
+			"INSERT INTO Favory (product_id) VALUES (%s)", (substitute_id,))
 		self.cnx.commit()
 
 	def see_favories(self):
+		"""Returns all the saved substitutes, as a list of dict"""
 		cursor = self.cursor
 		favories = []
 		cursor.execute("SELECT product_id FROM Favory")
-		result = cursor.fetchall() # for e in cursor?
-		for dico in result:
-			cursor.execute("SELECT * FROM Product WHERE id = %s", (dico["product_id"],))
+		for dico in cursor.fetchall():
+			cursor.execute(
+				"SELECT * FROM Product WHERE id = %s", (dico["product_id"],))
 			favories.append(cursor.fetchone())
 		return favories
 

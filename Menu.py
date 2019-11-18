@@ -6,40 +6,38 @@ from DatabaseCreator import DatabaseCreator
 
 class Menu:
 	"""Use Menu.main_menu() to launch the Menu.
-	The Menu guide the user through a series of event:
+	The Menu guide the user through a series of events:
 	-Choose a category
 	-Choose between randomly selected products of this category
-	-See an healthier product of the category"""
+	-See an healthier product of the category
+	-Save the subtitute"""
 
 	def __init__(self, cnx, cursor):
 		self.cnx = cnx
 		self.cursor = cursor
 		self.seeker = DatabaseSeeker(self.cursor, self.cnx)
+		# An instance of DatabaseCreator isn't allways needed, so
+		# it will be created when needed and assigned to self.creator.
 		self.creator = None
-
-
-	"""def close_connection(self):
-		self.cursor.close()
-		self.cnx.close()"""
 
 	@staticmethod
 	def display_substitute(sbt_dict):
 		"""Use the given dict to display the substitute's informations.
-		Take as param a dict with the following keys: name, description, shop,
-		url. The shops can be an empty string. """
+		Take as param a dict with the following keys: name, description,
+		shop, url. sbt_dict["shop"] can be an empty string. """
 		if sbt_dict:
-			string = txt["sbt_prs"].format(name = sbt_dict["name"],
-				description = sbt_dict["description"])
+			string = txt["sbt_prs"].format(name=sbt_dict["name"],
+				description=sbt_dict["description"])
 			if sbt_dict["shop"]:
-				string += txt["sbt_shop"].format(shop = sbt_dict["shop"])
-			string += txt["sbt_url"].format(url = sbt_dict["url"])
+				string += txt["sbt_shop"].format(shop=sbt_dict["shop"])
+			string += txt["sbt_url"].format(url=sbt_dict["url"])
 			print(string)
 		else:
 			print(txt["no_sbt"])
 
 	def get_input(self, string, input_range):
-		"""Ask an input with the given string, then test if the input is a
-		number between 1 and the given range"""
+		"""Ask an input with the given string, then test if the
+		input is a number, and is between 1 and the given range"""
 		inp = input(string)
 		try:
 			inp = int(inp)
@@ -51,7 +49,68 @@ class Menu:
 			return self.get_input(string, input_range)
 		return inp
 
-	def prepare_database(self, categories_name, reset = False):
+	def choose_category(self):
+		"""Ask the user to choose a category, by a number on input"""
+		string = txt["choose_category"]
+		for i, category in enumerate(config.categories_name):
+			# i+1 because the list starts with 1 for the user
+			string += "{}: {}\n".format(i+1, category)
+		inp = self.get_input(string, i+1)
+		# inp-1 because the list starts with 1 for the user
+		return config.categories_name[inp-1]
+
+	def choose_product(self, category_name):
+		"""Select randomly some products of the given category,
+		and ask the user to choose one"""
+		products_list = self.seeker.random_products(category_name)
+		string = txt["choose_product"]
+		for i, product in enumerate(products_list):
+			# i+1 because the list starts with 1 for the user
+			string += "{}: {}\n".format(i+1, product["name"])
+		inp = self.get_input(string, i+1)
+		# inp-1 because the list starts with 1 for the user
+		return products_list[inp-1]
+
+	def save_substitute(self, sbt_dict):
+		"""Ask the user if they wants to save the substitute.
+		If the input is 1, save the substitute in the database"""
+		string = txt["save_sbt"]
+		inp = self.get_input(string, 2)
+		if inp == 1:
+			self.seeker.save_substitute(sbt_dict["id"])
+
+	def search_substitute(self):
+		"""Run the methods to:
+		-Let the user choose a category
+		-Let the user choose a product
+		-Find a substitute
+		-Save the substitute"""
+		category_name = self.choose_category()
+		product = self.choose_product(category_name)
+		sbt_dict = self.seeker.find_substitute(product)
+		self.display_substitute(sbt_dict)
+		if sbt_dict:
+			self.save_substitute(sbt_dict)
+
+	def see_favories(self):
+		"""Allows the user to see a list of the saved substitutes,
+		then choose one of the favorites to see more details"""
+		favories = self.seeker.see_favories()
+		if favories:
+			string = txt["choose_sbt"]
+			for i, favory in enumerate(favories):
+				# i+1 because the list starts with 1 for the user
+				string += "{}: {}\n".format(i+1, favory["name"])
+			inp = self.get_input(string, i+1)
+			# inp-1 because the list starts with 1 for the user
+			self.display_substitute(favories[inp-1])
+		else:
+			print(txt["no_saved_sbt"])
+
+	def prepare_database(self, categories_name, reset=False):
+		"""Make a request at OpenFoodFacts to download the products
+		of the given categories, and fill them in the database.
+		If reset=True, the existing tables will be deleted"""
 		print(txt["pls_wait"])
 		products_dict = ApiCommunicator.dl_products(categories_name)
 		if not self.creator:
@@ -61,56 +120,16 @@ class Menu:
 		self.creator.fill_database(products_dict)
 		print(txt["dl_done"])
 
-	def choose_category(self):
-		"""Ask the user to choose a category, by a number on input"""
-		string = txt["choose_category"]
-		for i, category in enumerate(config.categories_name):
-			string += "{}: {}\n".format(i+1, category) # The list start with 1 instead of 0 for the user
-		inp = self.get_input(string, i+1)
-		return config.categories_name[inp-1] # The list start with 1 instead of 0 for the user
-
-	def choose_product(self, category_name):
-		"""Select randomly some products, and ask the user to choose one"""
-		products_list, category_id = self.seeker.random_products(category_name) # ne pas récup category_id, et le chercher à nouveau dans find_substitute?
-		string = txt["choose_product"]
-		for i, product in enumerate(products_list):
-			string += "{}: {}\n".format(i+1, product["name"]) # The list start with 1 instead of 0 for the user. product[1] for the name, [0] is the id
-		inp = self.get_input(string, i+1)
-		return products_list[inp-1], category_id
-
-	def save_substitute(self, sbt_dict):
-		string = txt["save_sbt"]
-		inp = self.get_input(string, 2)
-		if inp == 1:
-			self.seeker.save_substitute(sbt_dict["id"])
-
-	def search_substitute(self):
-		category_name = self.choose_category()
-		product, category_id = self.choose_product(category_name)
-		sbt_dict = self.seeker.find_substitute(product["id"], category_id)
-		self.display_substitute(sbt_dict)
-		if sbt_dict:
-			self.save_substitute(sbt_dict)
-
-	def see_favories(self):
-		favories = self.seeker.see_favories()
-		if favories:
-			string = txt["choose_sbt"]
-			for i, favory in enumerate(favories):
-				string += "{}: {}\n".format(i+1, favory["name"]) # The list start with 1 instead of 0 for the user. product[1] for the name, [0] is the id
-			inp = self.get_input(string, i+1)
-			self.display_substitute(favories[inp-1])
-		else:
-			print(txt["no_saved_sbt"])
-
 	def update_database(self):
+		"""Warn the user that an update will erase all datas,
+		then ask an input. If the input is 1, reset the database"""
 		string = txt["update_database"]
 		inp = self.get_input(string, 2)
 		if inp == 1:
-			self.prepare_database(config.categories_name, reset = True)
+			self.prepare_database(config.categories_name, reset=True)
 
 	def main_menu(self):
-		"""The main method of Menu. Launch this method to run the app."""
+		"""The main method of Menu. Launch this method to run the app"""
 		print(txt["welcome"])
 		categories_name = self.seeker.test_database()
 		if categories_name:
@@ -129,4 +148,3 @@ class Menu:
 		inp = self.get_input(string, 2)
 		if inp == 1:
 			return self.main_menu()
-

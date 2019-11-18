@@ -21,11 +21,13 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 		self.cnx = cnx
 
 	def create_tables(self):
+		"""Creates in the database the tables needed for the program"""
 		for table in self.TABLES_LIST:
-			request = "CREATE TABLE IF NOT EXISTS " + table + " ENGINE=INNODB"
-			self.cursor.execute(request)
+			querry = "CREATE TABLE IF NOT EXISTS " + table + " ENGINE=INNODB"
+			self.cursor.execute(querry)
 
 	def verify_product(self, product):
+		"""Verifies if the product have the informations needed"""
 		for tag in self.PRODUCT_TAGS:
 			if tag not in product.keys() or not product[tag]:
 				if tag in ("stores", "brands"):
@@ -36,6 +38,8 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 
 	def insert_product(self, product, category_id):
 		p_name = product["product_name"]
+		# If there is brands indicated for the product, the first of
+		# them will be used to complement the name of the product
 		p_brand = product["brands"].split(",")[0]
 		if p_brand and p_brand not in p_name:
 			p_name += " " + p_brand

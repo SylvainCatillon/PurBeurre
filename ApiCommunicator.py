@@ -31,9 +31,9 @@ class ApiCommunicator:
 				raw_result = requests.get("https://fr.openfoodfacts.org/categorie/{}/{}.json".format(category, page))
 				result = raw_result.json()
 				if result["count"] < 50: # mettre option dans config
-					print(txt["wrong_cat"].format(category = category))
+					print(txt["wrong_cat"].format(category=category))
 					break
 				products_list += result["products"]
-			print(txt["cat_downloaded"].format(category = category))
+			print(txt["cat_downloaded"].format(category=category))
 			products_dict[category] = products_list
 		return products_dict
