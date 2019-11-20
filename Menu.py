@@ -52,17 +52,20 @@ class Menu:
 	def choose_category(self):
 		"""Ask the user to choose a category, by a number on input"""
 		string = txt["choose_category"]
-		for i, category in enumerate(config.categories_name):
+		good_categories, low_categories = self.seeker.see_categories()
+		for category_dict in low_categories:
+			print(txt["low_category"].format(category=category_dict["name"]))
+		for i, category_dict in enumerate(good_categories):
 			# i+1 because the list starts with 1 for the user
-			string += "{}: {}\n".format(i+1, category)
+			string += "{}: {}\n".format(i+1, category_dict["name"])
 		inp = self.get_input(string, i+1)
 		# inp-1 because the list starts with 1 for the user
-		return config.categories_name[inp-1]
+		return good_categories[inp-1]["id"]
 
-	def choose_product(self, category_name):
+	def choose_product(self, category_id):
 		"""Select randomly some products of the given category,
 		and ask the user to choose one"""
-		products_list = self.seeker.random_products(category_name)
+		products_list = self.seeker.random_products(category_id)
 		string = txt["choose_product"]
 		for i, product in enumerate(products_list):
 			# i+1 because the list starts with 1 for the user
@@ -71,13 +74,13 @@ class Menu:
 		# inp-1 because the list starts with 1 for the user
 		return products_list[inp-1]
 
-	def save_substitute(self, sbt_dict):
+	def save_substitute(self, sbt_id):
 		"""Ask the user if they wants to save the substitute.
 		If the input is 1, save the substitute in the database"""
 		string = txt["save_sbt"]
 		inp = self.get_input(string, 2)
 		if inp == 1:
-			self.seeker.save_substitute(sbt_dict["id"])
+			self.seeker.save_product(sbt_id)
 
 	def search_substitute(self):
 		"""Run the methods to:
@@ -85,12 +88,15 @@ class Menu:
 		-Let the user choose a product
 		-Find a substitute
 		-Save the substitute"""
-		category_name = self.choose_category()
-		product = self.choose_product(category_name)
+		category_id = self.choose_category()
+		product = self.choose_product(category_id)
 		sbt_dict = self.seeker.find_substitute(product)
 		self.display_substitute(sbt_dict)
 		if sbt_dict:
-			self.save_substitute(sbt_dict)
+			if self.seeker.is_saved(sbt_dict["id"]):
+				print(txt["saved_sbt"])
+			else:
+				self.save_substitute(sbt_dict["id"])
 
 	def see_favories(self):
 		"""Allows the user to see a list of the saved substitutes,

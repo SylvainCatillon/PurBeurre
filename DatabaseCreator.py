@@ -8,12 +8,12 @@ class DatabaseCreator:
  name VARCHAR(50) UNIQUE)",
 		"Product (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, \
 name VARCHAR(50) UNIQUE, category_id SMALLINT UNSIGNED, \
-nutriscore CHAR(1), description TEXT, shop VARCHAR(50), \
-url VARCHAR(100), INDEX ind_cat_nutri (category_id, nutriscore), \
-CONSTRAINT fk_category_id FOREIGN KEY (category_id) REFERENCES Category(id))",
+nutriscore CHAR(1), description TEXT, shop VARCHAR(50), url VARCHAR(100), \
+INDEX ind_cat_nutri (category_id, nutriscore), CONSTRAINT fk_category_id \
+FOREIGN KEY (category_id) REFERENCES Category(id) ON DELETE CASCADE)",
 		"Favory (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, \
 product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
-(product_id) REFERENCES Product(id))"
+(product_id) REFERENCES Product(id) ON DELETE CASCADE)"
 ]
 
 	def __init__(self, cursor, cnx):
@@ -52,6 +52,28 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 			VALUES (%s, %s, %s, %s, %s, %s)" # mauvaise indentation?
 		self.cursor.execute(querry, p_values)
 
+	"""def verify_category(self):
+		cursor = self.cursor
+		deleted_cat = []
+		cursor.execute("SELECT id, name FROM Category")
+		for category in cursor.fetchall():
+			cursor.execute(
+				"SELECT id FROM Product WHERE category_id = %s", (category["id"],))
+			if len(cursor.fetchall()) < config.min_prod_in_db:
+				cursor.execute(
+					"DELETE FROM Category WHERE id = %s", (category["id"],))
+				deleted_cat.append(category["name"])
+		return deleted_cat"""
+
+	"""def verify_category(self, category_id, category_name):
+		cursor = self.cursor
+		cursor.execute(
+			"SELECT id FROM Product WHERE category_id = %s", (category_id,))
+		if len(cursor.fetchall()) < config.min_prod_in_db:
+			print(text["deleted_cat"].format(category_name))
+			cursor.execute(
+				"DELETE FROM Category WHERE id = %s", (category_id,))"""
+
 	def fill_tables(self, products_dict):
 		cursor = self.cursor
 		for category, products_list in products_dict.items():
@@ -68,6 +90,7 @@ product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
 				product = self.verify_product(product)
 				if product:
 					self.insert_product(product, category_id)
+			#self.verify_category(category_id, category_name)
 
 	def fill_database(self, products_dict):
 		cursor = self.cursor
