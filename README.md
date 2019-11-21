@@ -8,7 +8,7 @@ You can save your search, to find easily all of your substitutes.
 Use the requirement.txt to install the needed package: 
 `pip install -r requirements.txt`\
 Please install MySQL: https://dev.mysql.com/downloads/mysql/#downloads \
-Then create a data base, and change the `config.py` file to set the user, the password and the name of the database. Choose a user who can access the data base.\
+Then create a data base, and change the `config.py` file to set the user, the password and the name of the database. Please use an empty database, and choose a user who can access the data base.\
 Finnaly, you can launch `main.py` to start the app
 
 You can change some variables in `config.py`:
