@@ -48,9 +48,3 @@ ApiCommunicator_text = dict(
 assez de produits", # Must contains {category}
 	cat_downloaded = "{category} téléchargé(e)s" # Must contains {category}
 )
-
-"""DatabaseCreator_text = dict(
-	# Must contains {category}
-	deleted_cat = "La catégorie {category} ne compte pas assez de produits \
-exploitables et a donc été supprimée de la base de données"
-)"""

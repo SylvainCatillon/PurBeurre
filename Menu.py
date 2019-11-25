@@ -1,8 +1,8 @@
 import config
 from text import Menu_text as txt
-from ApiCommunicator import ApiCommunicator
-from DatabaseSeeker import DatabaseSeeker
-from DatabaseCreator import DatabaseCreator
+from apicommunicator import ApiCommunicator
+from dbseeker import DatabaseSeeker
+from dbcreator import DatabaseCreator
 
 
 class Menu:
@@ -23,12 +23,12 @@ class Menu:
 
     @staticmethod
     def display_substitute(sbt_dict):
-        """Use the given dict to display the substitute's informations.
-        Take as param a dict with the following keys: name, description,
+        """Uses the given dict to display the substitute's informations.
+        Takes as param a dict with the following keys: name, description,
         shop, url. sbt_dict["shop"] can be an empty string. """
         if sbt_dict:
-            string = txt["sbt_prs"].format(name=sbt_dict["name"],
-description=sbt_dict["description"])
+            string = txt["sbt_prs"].format(
+                name=sbt_dict["name"], description=sbt_dict["description"])
             if sbt_dict["shop"]:
                 string += txt["sbt_shop"].format(shop=sbt_dict["shop"])
             string += txt["sbt_url"].format(url=sbt_dict["url"])
@@ -37,7 +37,7 @@ description=sbt_dict["description"])
             print(txt["no_sbt"])
 
     def get_input(self, string, input_range):
-        """Ask an input with the given string, then test if the
+        """Asks an input with the given string, then tests if the
         input is a number, and is between 1 and the given range"""
         inp = input(string)
         try:
@@ -51,7 +51,7 @@ description=sbt_dict["description"])
         return inp
 
     def choose_category(self):
-        """Ask the user to choose a category, by a number on input"""
+        """Asks the user to choose a category, by a number on input"""
         string = txt["choose_category"]
         good_categories, low_categories = self.seeker.see_categories()
         for category_dict in low_categories:
@@ -59,32 +59,32 @@ description=sbt_dict["description"])
         for i, category_dict in enumerate(good_categories):
             # i+1 because the list starts with 1 for the user
             string += "{}: {}\n".format(i+1, category_dict["name"])
-        inp = self.get_input(string, i+1)
+        inp = self.get_input(string, len(good_categories))
         # inp-1 because the list starts with 1 for the user
         return good_categories[inp-1]["id"]
 
     def choose_product(self, category_id):
-        """Select randomly some products of the given category,
-        and ask the user to choose one"""
+        """Selects randomly some products of the given category,
+        and asks the user to choose one"""
         products_list = self.seeker.random_products(category_id)
         string = txt["choose_product"]
         for i, product in enumerate(products_list):
             # i+1 because the list starts with 1 for the user
             string += "{}: {}\n".format(i+1, product["name"])
-        inp = self.get_input(string, i+1)
+        inp = self.get_input(string, len(products_list))
         # inp-1 because the list starts with 1 for the user
         return products_list[inp-1]
 
     def save_substitute(self, sbt_id):
-        """Ask the user if they wants to save the substitute.
-        If the input is 1, save the substitute in the database"""
+        """Asks the user if he/she wants to save the substitute.
+        If the input is 1, saves the substitute in the database"""
         string = txt["save_sbt"]
         inp = self.get_input(string, 2)
         if inp == 1:
             self.seeker.save_product(sbt_id)
 
     def search_substitute(self):
-        """Run the methods to:
+        """Runs the methods to:
         -Let the user choose a category
         -Let the user choose a product
         -Find a substitute
@@ -108,28 +108,28 @@ description=sbt_dict["description"])
             for i, favory in enumerate(favories):
                 # i+1 because the list starts with 1 for the user
                 string += "{}: {}\n".format(i+1, favory["name"])
-            inp = self.get_input(string, i+1)
+            inp = self.get_input(string, len(favories))
             # inp-1 because the list starts with 1 for the user
             self.display_substitute(favories[inp-1])
         else:
             print(txt["no_saved_sbt"])
 
     def prepare_database(self, categories_name, reset=False):
-        """Make a request at OpenFoodFacts to download the products
-        of the given categories, and fill them in the database.
+        """Makes a request at OpenFoodFacts to download the products
+        of the given categories, and fills them in the database.
         If reset=True, the existing tables will be deleted"""
         print(txt["pls_wait"])
-        products_dict = ApiCommunicator.dl_products(categories_name)
         if not self.creator:
             self.creator = DatabaseCreator(self.cursor, self.cnx)
         if reset:
             self.creator.reset_database()
+        products_dict = ApiCommunicator.dl_products(categories_name)
         self.creator.fill_database(products_dict)
         print(txt["dl_done"])
 
     def update_database(self):
-        """Warn the user that an update will erase all datas,
-        then ask an input. If the input is 1, reset the database"""
+        """Warns the user that an update will erase all datas,
+        then asks an input. If the input is 1, reset the database"""
         string = txt["update_database"]
         inp = self.get_input(string, 2)
         if inp == 1:
@@ -141,7 +141,7 @@ description=sbt_dict["description"])
         categories_name = self.seeker.test_database()
         if categories_name:
             self.prepare_database(categories_name)
-            string = txt["main_choice"]
+        string = txt["main_choice"]
         inp = self.get_input(string, 4)
         if inp == 1:
             self.search_substitute()
@@ -150,8 +150,9 @@ description=sbt_dict["description"])
         elif inp == 3:
             self.update_database()
         elif inp == 4:
-            return
+            return None
         string = txt["play_again"]
         inp = self.get_input(string, 2)
         if inp == 1:
             return self.main_menu()
+        return None

@@ -1,9 +1,11 @@
 from random import choice, sample
+
 import config
+
 
 class DatabaseSeeker:
     """Use this class to communicate with the database, once the tables
-    are created and the products putted in the database"""
+    are created and the products puted in the database"""
 
     def __init__(self, cursor, cnx):
         self.cursor = cursor
@@ -23,20 +25,20 @@ class DatabaseSeeker:
     def find_substitute(self, product):
         """Finds a substitute for a given product (must be a dict
         with at least 'nustriscore' and 'category_id' as keys)
-        -Select the higher nutriscore of the product's category
-        -If there is no higher nutriscore, return an empty dict
-        -Else, select a random product between the possible subsitutes
-        and return a dict with all the informations of this product"""
+        -Selects the higher nutriscore of the product's category
+        -If there is no higher nutriscore, returns an empty dict
+        -Else, selects a random product between the possible subsitutes
+        and returns a dict with all the informations of this product"""
         sbt_dict = {}
         cursor = self.cursor
         querry = "SELECT nutriscore FROM Product WHERE category_id = %s \
-        and nutriscore < %s ORDER BY nutriscore LIMIT 1"
+and nutriscore < %s ORDER BY nutriscore LIMIT 1"
         cursor.execute(
             querry, (product["category_id"], product["nutriscore"]))
         result = self.cursor.fetchone()
         if result:
             querry = "SELECT id from Product WHERE category_id = %s and \
-            nutriscore = %s"
+nutriscore = %s"
             cursor.execute(
                 querry, (product["category_id"], result["nutriscore"]))
             substitute_id = choice(cursor.fetchall())["id"]

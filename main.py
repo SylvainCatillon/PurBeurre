@@ -1,8 +1,10 @@
-from ConnectMenu import ConnectMenu
+from connectmenu import ConnectMenu
+
 
 def main():
-	with ConnectMenu() as menu:
-		menu.main_menu()
+    """Launch this function to run the program"""
+    with ConnectMenu() as menu:
+        menu.main_menu()
 
 if __name__ == '__main__':
-	main()
+    main()
