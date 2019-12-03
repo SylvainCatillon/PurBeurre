@@ -6,14 +6,14 @@ class DatabaseCreator:
                     "nutrition_grade_fr", "stores"]
     TABLES_LIST = [
         "Category (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,\
-name VARCHAR(50) UNIQUE)",
+name VARCHAR(50) NOT NULL UNIQUE)",
         "Product (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, \
-name VARCHAR(50) UNIQUE, category_id SMALLINT UNSIGNED, \
+name VARCHAR(50) UNIQUE, category_id SMALLINT UNSIGNED NOT NULL, \
 nutriscore CHAR(1), description TEXT, shop VARCHAR(50), url VARCHAR(100), \
 INDEX ind_cat_nutri (category_id, nutriscore), CONSTRAINT fk_category_id \
 FOREIGN KEY (category_id) REFERENCES Category(id) ON DELETE CASCADE)",
         "Favory (id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, \
-product_id SMALLINT UNSIGNED, CONSTRAINT fk_product_id FOREIGN KEY \
+product_id SMALLINT UNSIGNED NOT NULL, CONSTRAINT fk_product_id FOREIGN KEY \
 (product_id) REFERENCES Product(id) ON DELETE CASCADE)"]
 
     def __init__(self, cursor, cnx):

@@ -1,5 +1,5 @@
 # PurBeurreApp
-PurBeurreApp allow you to find healthier substitutes to your favorites aliments, using Open Food Facts database. https://world.openfoodfacts.org/ \
+PurBeurreApp allows you to find healthier substitutes to your favorites aliments, using Open Food Facts database. https://world.openfoodfacts.org/ \
 You can choose between 5 categories, then between 10 randomly chosen aliments. Once you selected an aliment, the app will search for
 a healthier substitute and show you a description of the substitute, a shop where you can buy it and a link to its Open Food Facts page.
 You can save your search, to find easily all of your substitutes.
